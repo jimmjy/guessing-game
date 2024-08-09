@@ -1,21 +1,68 @@
-import { StyleSheet, ImageBackground } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from 'react';
+import { StyleSheet, ImageBackground, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFonts } from 'expo-font';
 
-import StartGameScreen from "./screens/StartGameScreen";
+import StartGameScreen from './screens/StartGameScreen';
+import GameScreen from './screens/GameScreen';
+import GameOverScreen from './screens/GameOverScreen';
+import Colors from './constants/colors';
+import * as SplashScreen from 'expo-splash-screen';
+
+import openSans from './assets/fonts/OpenSans-Regular.ttf';
+import openSansBold from './assets/fonts/OpenSans-Bold.ttf';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const [userNumber, setUserNumber] = useState(null);
+  const [gameIsOver, setGameIsOver] = useState(true);
+
+  const [fontsLoaded, fontsError] = useFonts({
+    'open-sans': openSans,
+    'open-sans-bold': openSansBold,
+  });
+
+  console.log({ fontsError, fontsLoaded });
+  useEffect(() => {
+    if (fontsLoaded || fontsError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsError, fontsLoaded]);
+
+  const pickedNumberHandler = (pickedNumber) => {
+    setUserNumber(pickedNumber);
+    setGameIsOver(false);
+  };
+
+  const gameOverHandler = () => {
+    setGameIsOver(true);
+  };
+
+  let screen = <StartGameScreen onPickNumber={pickedNumberHandler} />;
+
+  if (userNumber) {
+    screen = (
+      <GameScreen userNumber={userNumber} onGameOver={gameOverHandler} />
+    );
+  }
+
+  if (gameIsOver && userNumber) {
+    screen = <GameOverScreen />;
+  }
+
   return (
     <LinearGradient
-      colors={["#4e0329", "#ddb52f"]}
+      colors={[Colors.primary700, Colors.accent500]}
       style={styles.rootScreen}
     >
       <ImageBackground
-        source={require("./assets/images/background.png")}
+        source={require('./assets/images/background.png')}
         resizeMode='cover'
         style={styles.rootScreen}
         imageStyle={styles.backgroundImage}
       >
-        <StartGameScreen />
+        <SafeAreaView style={styles.rootScreen}>{screen}</SafeAreaView>
       </ImageBackground>
     </LinearGradient>
   );
